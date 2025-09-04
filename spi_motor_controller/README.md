@@ -1,5 +1,9 @@
-SPI motor controller made for the Waterloo Aerial Robotics Group (WARG) design team. The servo motor can be controlled
-by rotating the potentioemter, which allows you to test the servos functionality and performance. 
+SPI Motor Controller
+
+This project was done as a part of the Waterloo Aerial Robotics Group (WARG) design team, and it highlights communication
+between multiple hardware devices in an embedded system. The main goal is to test the functionality and performance of a
+servo motor, which can be done by rotating a potentiometer, and sending that voltage value via SPI to the STM32 microcontroller,
+which converts it to a digital pwm signal. 
 
 The system consists of three four components:
 - Potentiometer
