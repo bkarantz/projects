@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
-from sort import Sort 
+from sort import Sort
 import time
 import RPi.GPIO as GPIO
 from picamera2 import Picamera2
@@ -47,6 +47,10 @@ try:
     RIGHT_ESC_PIN = 20
     GPIO.setup(LEFT_ESC_PIN, GPIO.OUT)
     GPIO.setup(RIGHT_ESC_PIN, GPIO.OUT)
+
+    # Dart Push Servo GPIO
+    DART_SERVO_PIN = 25
+    GPIO.setup(DART_SERVO_PIN, GPIO.OUT)
 
 except Exception as e:
     print(f"GPIO Setup Error {e}")
@@ -125,7 +129,7 @@ mag_motor_thread.start()
 def belt_shooting_function():
     global shooting, stop_threads
     last_update = 0
-    update_interval = 0.05  # 50ms
+    update_interval = 0.05  # 50 ms
     while not stop_threads:
         try:
             now = time.time()
@@ -145,6 +149,28 @@ def belt_shooting_function():
 belt_shooting_thread = threading.Thread(target=belt_shooting_function)
 belt_shooting_thread.daemon = True
 belt_shooting_thread.start()
+
+def dart_push_function():
+    global shooting, stop_threads
+    last_update = 0
+    update_interval = 0.05 # 50 ms
+    while not stop_threads:
+        try:
+            now = time.time()
+            if shooting and now - last_update > update_interval:
+                pi.set_servopulsewidth(DART_SERVO_PIN, 2000)
+                time.sleep(0.4)
+                pi.set_servopulsewidth(DART_SERVO_PIN, 1000)
+                time.sleep(0.4)
+                last_update = now
+            time.sleep(0.01)
+        except Exception as e:
+            print(f"Dart Servo Thread Error: {e}")
+            break
+
+dart_push_thread = threading.Thread(target=dart_push_function)
+dart_push_thread.daemon = True
+dart_push_thread.start()
 
 # ----------------------- OFF Button Thread -------------------------
 def turn_system_off():
@@ -318,6 +344,7 @@ finally:
     base_motor_thread.join()
     mag_motor_thread.join()
     belt_shooting_thread.join()
+    dart_push_thread.join()
     frame_queue.put(None) # Signal FFmpeg thread to exit
     stream_thread.join()
 
